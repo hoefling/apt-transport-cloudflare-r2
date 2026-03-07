@@ -18,7 +18,11 @@ impl Message {
         let mut fields = HashMap::new();
         for line in lines {
             if let Some((key, value)) = line.split_once(": ") {
-                fields.insert(key.trim().to_string(), value.trim().to_string());
+                let entry: &mut String = fields.entry(key.trim().to_string()).or_default();
+                if !entry.is_empty() {
+                    entry.push('\n');
+                }
+                entry.push_str(value.trim());
             }
         }
 

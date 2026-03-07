@@ -6,5 +6,5 @@ use transport::Transport;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    Transport::new().await?.run().await
+    Transport::new().run().await
 }
