@@ -22,7 +22,10 @@ dependencies = [
  "aws-config",
  "aws-credential-types",
  "aws-sdk-s3",
+ "hex",
+ "md-5",
  "reqwest",
+ "sha2",
  "tempfile",
  "tokio",
 ]

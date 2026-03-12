@@ -4,6 +4,8 @@ use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Builder;
 use aws_sdk_s3::config::Region;
 use aws_sdk_s3::Client;
+use md5::Md5;
+use sha2::{Digest, Sha256};
 use std::io::{self, BufRead, Write};
 
 use crate::message::Message;
@@ -154,12 +156,21 @@ impl Transport {
                 let bytes = resp.body.collect().await?.into_bytes();
                 std::fs::write(filename, &bytes)?;
 
+                let sha256 = hex::encode(Sha256::digest(&bytes));
+                let md5 = hex::encode(Md5::digest(&bytes));
+
                 let size = bytes.len().to_string();
                 out.write_all(
                     Message::format(
                         201,
                         "URI Done",
-                        &[("URI", uri), ("Filename", filename), ("Size", &size)],
+                        &[
+                            ("URI", uri),
+                            ("Filename", filename),
+                            ("Size", &size),
+                            ("SHA256-Hash", &sha256),
+                            ("MD5-Hash", &md5),
+                        ],
                     )
                     .as_bytes(),
                 )?;
@@ -315,16 +326,20 @@ mod tests {
         listener.local_addr().unwrap().port()
     }
 
-async fn wait_until_ready(endpoint: &str) {
-    let url = format!("{}/minio/health/live", endpoint);
-    for _ in 0..20 {
-        if reqwest::get(&url).await.map(|r| r.status().is_success()).unwrap_or(false) {
-            return;
+    async fn wait_until_ready(endpoint: &str) {
+        let url = format!("{}/minio/health/live", endpoint);
+        for _ in 0..20 {
+            if reqwest::get(&url)
+                .await
+                .map(|r| r.status().is_success())
+                .unwrap_or(false)
+            {
+                return;
+            }
+            tokio::time::sleep(Duration::from_millis(250)).await;
         }
-        tokio::time::sleep(Duration::from_millis(250)).await;
+        panic!("minio did not become ready in time");
     }
-    panic!("minio did not become ready in time");
-}
 
     async fn make_s3_client(endpoint: &str) -> aws_sdk_s3::Client {
         let config = aws_config::from_env()
@@ -355,7 +370,9 @@ async fn wait_until_ready(endpoint: &str) {
     #[tokio::test]
     async fn test_acquire_existing_file() {
         let minio = MinioInstance::start().await;
-        minio.upload("pool/main/test_1.0_arm64.deb", b"fake deb content").await;
+        minio
+            .upload("pool/main/test_1.0_arm64.deb", b"fake deb content")
+            .await;
 
         let mut transport = Transport::new();
         transport.configure(&make_config(&minio.endpoint)).unwrap();
@@ -376,6 +393,8 @@ async fn wait_until_ready(endpoint: &str) {
         assert!(response.contains("200 URI Start"));
         assert!(response.contains("201 URI Done"));
         assert!(response.contains("Size: 16"));
+        assert!(response.contains("SHA256-Hash:"));
+        assert!(response.contains("MD5-Hash:"));
         assert_eq!(std::fs::read(out_file.path()).unwrap(), b"fake deb content");
     }
 
@@ -406,7 +425,9 @@ async fn wait_until_ready(endpoint: &str) {
     #[tokio::test]
     async fn test_acquire_strips_bucket_from_uri() {
         let minio = MinioInstance::start().await;
-        minio.upload("dists/private/InRelease", b"release file").await;
+        minio
+            .upload("dists/private/InRelease", b"release file")
+            .await;
 
         let mut transport = Transport::new();
         transport.configure(&make_config(&minio.endpoint)).unwrap();

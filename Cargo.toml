@@ -12,6 +12,9 @@ anyhow = "1"
 aws-config = { version = "1", features = ["behavior-version-latest"] }
 aws-credential-types = { version = "1", features = ["hardcoded-credentials"] }
 aws-sdk-s3 = "1"
+hex = "0.4"
+md-5 = "0.10"
+sha2 = "0.10"
 tokio = { version = "1", features = ["full"] }
 
 [dev-dependencies]
