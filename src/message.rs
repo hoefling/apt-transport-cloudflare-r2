@@ -51,7 +51,8 @@ mod tests {
 
     #[test]
     fn test_parse_simple_message() {
-        let input = "600 URI Acquire\nURI: r2://apt-private/pool/main/pkg.deb\nFilename: /tmp/pkg.deb\n";
+        let input =
+            "600 URI Acquire\nURI: r2://apt-private/pool/main/pkg.deb\nFilename: /tmp/pkg.deb\n";
         let msg = Message::parse(input).unwrap();
         assert_eq!(msg.code, 600);
         assert_eq!(msg.description, "URI Acquire");
@@ -87,10 +88,11 @@ mod tests {
 
     #[test]
     fn test_format_capabilities() {
-        let output = Message::format(100, "Capabilities", &[
-            ("Version", "1.0"),
-            ("Single-Instance", "true"),
-        ]);
+        let output = Message::format(
+            100,
+            "Capabilities",
+            &[("Version", "1.0"), ("Single-Instance", "true")],
+        );
         assert!(output.starts_with("100 Capabilities\n"));
         assert!(output.contains("Version: 1.0\n"));
         assert!(output.contains("Single-Instance: true\n"));
