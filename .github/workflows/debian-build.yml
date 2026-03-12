@@ -115,3 +115,12 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: artifacts/**/*
+
+    - name: Trigger APT repo import
+      uses: benc-uk/workflow-dispatch@v1
+      with:
+        workflow: import-release.yml
+        repo: hoefling/apt
+        ref: refs/heads/main
+        inputs: '{"repo":"${{ github.repository }}","version":"${{ github.ref_name }}"}'
+        token: ${{ secrets.APT_REPO_TOKEN }}
