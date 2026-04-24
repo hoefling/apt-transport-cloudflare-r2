@@ -2,5 +2,13 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "groupName": "Rust crypto digest crates",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": ["md-5", "sha2"],
+      "groupSlug": "rust-digest"
+    }
   ]
 }
