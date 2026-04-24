@@ -19,7 +19,7 @@ jobs:
     name: Build deb for (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
     container:
-      image: debian:13.3
+      image: debian:13.4
     strategy:
       matrix:
         include:
@@ -75,7 +75,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     needs: build-deb
     container:
-      image: debian:13.3
+      image: debian:13.4
     strategy:
       matrix:
         include:
